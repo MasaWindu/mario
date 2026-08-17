@@ -131,8 +131,8 @@ export function drawKip(ctx, x, y, w, h, state) {
   drawArm(backArmAngle, KIP.bellyShade);
 
   // Belly
-  ctx.fillStyle = KIP.belly;
   const belW = bw * 0.55, belH = bh * 0.62;
+  ctx.fillStyle = litRadial(ctx, 0.5, hipY - belH * 0.5 - 1, belW * 0.6, KIP.belly, { strength: 20, lightY: -0.3 });
   roundRect(ctx, -belW / 2 + 0.5, hipY - belH - 1, belW, belH, belW * 0.4);
   ctx.fill();
 
@@ -277,6 +277,11 @@ export function drawPuffshroom(ctx, x, y, w, h, facing, walkPhase, squished, t =
   ctx.fillStyle = '#241614';
   ellipse(ctx, -w * 0.14, -h * 0.32 + bob * 0.5, 1.1, 1.3 * pBlink); ctx.fill();
   ellipse(ctx, w * 0.14, -h * 0.32 + bob * 0.5, 1.1, 1.3 * pBlink); ctx.fill();
+  if (pBlink > 0.5) {
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ellipse(ctx, -w * 0.19, -h * 0.37 + bob * 0.5, 0.35, 0.4); ctx.fill();
+    ellipse(ctx, w * 0.09, -h * 0.37 + bob * 0.5, 0.35, 0.4); ctx.fill();
+  }
   ctx.restore();
 }
 

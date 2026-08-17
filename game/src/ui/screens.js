@@ -21,8 +21,28 @@ function drawSparkles(ctx, t, count, colors) {
   ctx.restore();
 }
 
+function confettiShape(ctx, kind, s) {
+  ctx.beginPath();
+  if (kind === 0) {
+    // diamond
+    ctx.moveTo(0, -s); ctx.lineTo(s * 0.7, 0); ctx.lineTo(0, s); ctx.lineTo(-s * 0.7, 0);
+  } else if (kind === 1) {
+    // four-point star (sparkle)
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2;
+      const r1 = s, r2 = s * 0.35;
+      ctx.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+      ctx.lineTo(Math.cos(a + Math.PI / 4) * r2, Math.sin(a + Math.PI / 4) * r2);
+    }
+  } else {
+    // leaf / ribbon
+    ctx.moveTo(0, -s); ctx.quadraticCurveTo(s, 0, 0, s); ctx.quadraticCurveTo(-s, 0, 0, -s);
+  }
+  ctx.closePath();
+}
+
 function drawConfetti(ctx, t, count) {
-  const colors = ['#ffce54', '#ff8fb0', '#7ee8ff', '#a8ffb0', '#fff'];
+  const colors = ['#ffce54', '#ff8fb0', '#7ee8ff', '#a8ffb0', '#fff2a8'];
   ctx.save();
   for (let i = 0; i < count; i++) {
     const seed = i * 91.7;
@@ -30,13 +50,61 @@ function drawConfetti(ctx, t, count) {
     const fallSpeed = 40 + (i % 6) * 12;
     const y = ((t * fallSpeed + seed * 5) % (VIEW_H + 30)) - 15;
     const spin = t * (2 + (i % 4)) + seed;
+    const size = 1.6 + (i % 4) * 0.7;
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(spin);
-    ctx.fillStyle = colors[i % colors.length];
-    ctx.fillRect(-2, -1, 4, 2);
+    const color = colors[i % colors.length];
+    ctx.fillStyle = color;
+    confettiShape(ctx, i % 3, size);
+    ctx.fill();
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 0.4;
+    ctx.stroke();
     ctx.restore();
   }
+  ctx.restore();
+}
+
+function drawLogoText(ctx, text, cx, cy, t) {
+  ctx.save();
+  ctx.font = "900 34px 'Courier New', monospace";
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'alphabetic';
+
+  // Warm outer glow (pulses gently like an ember).
+  const glowStrength = 14 + Math.sin(t * 2.2) * 3;
+  ctx.shadowColor = 'rgba(255,140,40,0.75)';
+  ctx.shadowBlur = glowStrength;
+  ctx.lineWidth = 5;
+  ctx.strokeStyle = '#7a3a12';
+  ctx.strokeText(text, cx, cy);
+  ctx.shadowBlur = 0;
+
+  // Thin dark inline for crispness at the letterform edges.
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = '#5a2a0e';
+  ctx.strokeText(text, cx, cy);
+
+  // Vertical ember gradient fill: pale gold top -> deep orange bottom.
+  const grad = ctx.createLinearGradient(0, cy - 26, 0, cy + 6);
+  grad.addColorStop(0, '#fff6c9');
+  grad.addColorStop(0.45, '#ffce54');
+  grad.addColorStop(1, '#ff8a3d');
+  ctx.fillStyle = grad;
+  ctx.fillText(text, cx, cy);
+
+  // A single bright highlight streak across the top of the letters.
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.fillStyle = 'rgba(255,255,255,0.35)';
+  ctx.beginPath();
+  ctx.rect(cx - 160, cy - 30, 320, 6);
+  ctx.clip();
+  ctx.fillText(text, cx, cy);
+  ctx.restore();
+
   ctx.restore();
 }
 
@@ -45,7 +113,7 @@ export function drawTitleScreen(ctx, t) {
   drawSparkles(ctx, t, 22, ['#fff8e0', '#ffe9a8', '#fff']);
   ctx.save();
   ctx.translate(0, Math.sin(t * 1.4) * 2);
-  drawText(ctx, 'EMBERLEAP', VIEW_W / 2, 74, { size: 34, color: '#ffce54', stroke: '#7a3a12', strokeWidth: 4, align: 'center' });
+  drawLogoText(ctx, 'EMBERLEAP', VIEW_W / 2, 74, t);
   drawText(ctx, 'a Kip adventure', VIEW_W / 2, 90, { size: 9, color: '#fff', align: 'center' });
   ctx.restore();
 
