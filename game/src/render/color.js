@@ -4,8 +4,12 @@
 
 function clamp255(v) { return Math.max(0, Math.min(255, v)); }
 
-function parseHex(hex) {
-  const h = hex.replace('#', '');
+function parseHex(color) {
+  if (color.startsWith('rgb')) {
+    const [r, g, b] = color.match(/[\d.]+/g).map(Number);
+    return { r, g, b };
+  }
+  const h = color.replace('#', '');
   return {
     r: parseInt(h.substring(0, 2), 16),
     g: parseInt(h.substring(2, 4), 16),
@@ -26,10 +30,10 @@ export function darken(hex, amt) {
 // light direction (default upper-left), fading to the base color, with
 // a darker rim. Caller fills a path with this as fillStyle.
 export function litRadial(ctx, cx, cy, r, baseHex, { lightX = -0.35, lightY = -0.5, strength = 46 } = {}) {
-  const g = ctx.createRadialGradient(cx + lightX * r, cy + lightY * r, 0, cx, cy, r * 1.35);
+  const g = ctx.createRadialGradient(cx + lightX * r, cy + lightY * r, 0, cx, cy, r * 1.3);
   g.addColorStop(0, lighten(baseHex, strength));
-  g.addColorStop(0.55, baseHex);
-  g.addColorStop(1, darken(baseHex, strength * 0.7));
+  g.addColorStop(0.4, baseHex);
+  g.addColorStop(1, darken(baseHex, strength * 0.85));
   return g;
 }
 

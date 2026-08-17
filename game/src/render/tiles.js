@@ -1,6 +1,14 @@
 import { TILE } from '../engine/constants.js';
 import { T, isSolid } from '../world/tilemap.js';
 import { roundRect } from './sprites.js';
+import { litVertical, lighten, darken } from './color.js';
+
+// Deterministic per-tile pseudo-random 0..1, so shading variation is
+// stable across frames instead of flickering.
+function hash2(a, b) {
+  const v = Math.sin(a * 12.9898 + b * 78.233) * 43758.5453;
+  return v - Math.floor(v);
+}
 
 // Renders visible tile range only. camX/camY are world px of camera top-left.
 export function drawTileMap(ctx, map, pal, camX, camY, viewW, viewH, t) {
@@ -30,22 +38,25 @@ function drawTile(ctx, id, px, py, pal, cx, cy, map, t) {
     case T.SOLID:
     case T.DECOR_SOLID: {
       const grassy = !neighborSolidAbove(map, cx, cy);
-      const grad = ctx.createLinearGradient(px, py, px, py + TILE);
-      grad.addColorStop(0, pal.ground);
-      grad.addColorStop(0.55, pal.ground);
-      grad.addColorStop(1, pal.groundShade);
-      ctx.fillStyle = grad;
+      // Per-tile brightness jitter breaks up the mechanical repeated-tile
+      // look; a strong top-lit / bottom-shadow gradient gives real form
+      // instead of a flat fill with a thin edge line.
+      const jitter = (hash2(cx, cy) - 0.5) * 14;
+      ctx.fillStyle = litVertical(ctx, py, py + TILE, lighten(pal.ground, jitter), 30);
       ctx.fillRect(px, py, TILE, TILE);
       ctx.fillStyle = pal.groundShade;
       ctx.fillRect(px, py + TILE - 3, TILE, 3);
       // ambient-occlusion corner darkening where neighbors are open
-      ctx.fillStyle = 'rgba(0,0,0,0.10)';
-      if (!isSolid(map.get(cx - 1, cy))) ctx.fillRect(px, py, 2, TILE);
-      if (!isSolid(map.get(cx + 1, cy))) ctx.fillRect(px + TILE - 2, py, 2, TILE);
+      ctx.fillStyle = 'rgba(0,0,0,0.14)';
+      if (!isSolid(map.get(cx - 1, cy))) ctx.fillRect(px, py, 2.5, TILE);
+      if (!isSolid(map.get(cx + 1, cy))) ctx.fillRect(px + TILE - 2.5, py, 2.5, TILE);
+      // light-side rim on the opposite edge for a lit-block feel
+      ctx.fillStyle = 'rgba(255,255,255,0.08)';
+      if (!isSolid(map.get(cx - 1, cy))) ctx.fillRect(px + 2.5, py, 1, TILE);
       if (grassy) {
-        ctx.fillStyle = pal.groundTop;
+        ctx.fillStyle = litVertical(ctx, py - 2, py + 4, pal.groundTop, 26);
         ctx.fillRect(px, py, TILE, 4);
-        ctx.fillStyle = 'rgba(255,255,255,0.18)';
+        ctx.fillStyle = 'rgba(255,255,255,0.22)';
         ctx.fillRect(px, py, TILE, 1.5);
         ctx.fillStyle = pal.groundTop2;
         for (let i = 0; i < 3; i++) {
@@ -53,17 +64,16 @@ function drawTile(ctx, id, px, py, pal, cx, cy, map, t) {
           ctx.fillRect(tx, py - 2, 2, 3);
         }
       }
-      // subtle vertical seam
-      ctx.fillStyle = 'rgba(0,0,0,0.06)';
-      ctx.fillRect(px, py, 1, TILE);
       break;
     }
     case T.ONEWAY: {
-      ctx.fillStyle = pal.brick;
+      ctx.fillStyle = litVertical(ctx, py + TILE * 0.35, py + TILE * 0.75, pal.brick, 32);
       roundRect(ctx, px, py + TILE * 0.35, TILE, TILE * 0.4, 2);
       ctx.fill();
       ctx.fillStyle = pal.brickLine;
       ctx.fillRect(px, py + TILE * 0.35, TILE, 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fillRect(px + 1, py + TILE * 0.37, TILE - 2, 1);
       break;
     }
     case T.HAZARD: {
@@ -131,13 +141,13 @@ function drawTile(ctx, id, px, py, pal, cx, cy, map, t) {
       break;
     }
     case T.BLOCK_USED: {
-      ctx.fillStyle = pal.blockUsed;
+      ctx.fillStyle = litVertical(ctx, py, py + TILE, pal.blockUsed, 18);
       roundRect(ctx, px + 1, py + 1, TILE - 2, TILE - 2, 3);
       ctx.fill();
       break;
     }
     case T.BREAKABLE: {
-      ctx.fillStyle = pal.brick;
+      ctx.fillStyle = litVertical(ctx, py, py + TILE, pal.brick, 28);
       ctx.fillRect(px, py, TILE, TILE);
       ctx.strokeStyle = pal.brickLine;
       ctx.lineWidth = 1;
