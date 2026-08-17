@@ -1,4 +1,5 @@
 import { KIP } from './palette.js';
+import { litRadial, litVertical, lighten, darken } from './color.js';
 
 export function roundRect(ctx, x, y, w, h, r) {
   if (typeof r === 'number') r = { tl: r, tr: r, br: r, bl: r };
@@ -82,9 +83,9 @@ export function drawKip(ctx, x, y, w, h, state) {
 
   // Body
   const bodyCol = ember ? KIP.furEmber : KIP.fur;
-  ctx.fillStyle = bodyCol;
   const bw = (big ? w * 0.95 : w * 0.86) * stretch;
   const bh = bodyH * squash;
+  ctx.fillStyle = litRadial(ctx, 0, hipY - bh * 0.55, bw * 0.7, bodyCol, { strength: 40 });
   roundRect(ctx, -bw / 2, hipY - bh, bw, bh, bw * 0.42);
   ctx.fill();
 
@@ -170,7 +171,7 @@ export function drawKip(ctx, x, y, w, h, state) {
   const headR = (big ? w * 0.5 : w * 0.46);
   const headY = hipY - bh - headR * 0.72;
   const headBob = airborne ? 0 : Math.sin(walkPhase * Math.PI * 2) * -0.6;
-  ctx.fillStyle = ember ? KIP.furEmber : KIP.fur;
+  ctx.fillStyle = litRadial(ctx, headR * 0.06, headY + headBob, headR, (ember ? KIP.furEmber : KIP.fur), { strength: 44 });
   ellipse(ctx, headR * 0.06, headY + headBob, headR * 0.98, headR);
   ctx.fill();
 
@@ -261,7 +262,7 @@ export function drawPuffshroom(ctx, x, y, w, h, facing, walkPhase, squished, t =
   roundRect(ctx, -w * 0.32, -3 + bob, 3, 3, 1); ctx.fill();
   roundRect(ctx, w * 0.02, -3 - bob, 3, 3, 1); ctx.fill();
   // body cap
-  ctx.fillStyle = '#e0554f';
+  ctx.fillStyle = litRadial(ctx, -w * 0.1, -h * 0.75 + bob * 0.5, w * 0.55, '#e0554f', { strength: 42 });
   ctx.beginPath();
   ctx.ellipse(0, -h * 0.55 + bob * 0.5, w * 0.52, h * 0.5, 0, Math.PI, 0);
   ctx.fill();
@@ -313,7 +314,7 @@ export function drawGlimmoth(ctx, x, y, w, h, facing, flapPhase, t) {
   wing(1, 1.1 - wingLift * 0.55 + 0.35);
 
   // Body
-  ctx.fillStyle = '#5c3fa6';
+  ctx.fillStyle = litRadial(ctx, -w * 0.08, -h * 0.12, w * 0.35, '#5c3fa6', { strength: 38 });
   ellipse(ctx, 0, 0, w * 0.32, h * 0.38); ctx.fill();
   ctx.fillStyle = '#4a3092';
   ellipse(ctx, 0, h * 0.14, w * 0.2, h * 0.2); ctx.fill();
@@ -348,7 +349,7 @@ export function drawShellbug(ctx, x, y, w, h, facing, walkPhase, inShell, t = 0)
   ctx.translate(cx, baseY);
   ctx.scale(facing, 1);
   if (inShell) {
-    ctx.fillStyle = '#3e9c6f';
+    ctx.fillStyle = litRadial(ctx, -w * 0.1, -h * 0.65, w * 0.5, '#3e9c6f', { strength: 34 });
     ellipse(ctx, 0, -h * 0.5, w * 0.5, h * 0.5); ctx.fill();
     ctx.fillStyle = '#2f7a56';
     for (let i = -1; i <= 1; i++) {
@@ -371,7 +372,7 @@ export function drawShellbug(ctx, x, y, w, h, facing, walkPhase, inShell, t = 0)
   ctx.moveTo(w * 0.3, -h * 0.82);
   ctx.lineTo(w * 0.42 - wiggle * 2, -h * 1.0);
   ctx.stroke();
-  ctx.fillStyle = '#3e9c6f';
+  ctx.fillStyle = litRadial(ctx, -w * 0.08, -h * 0.75, w * 0.5, '#3e9c6f', { strength: 34 });
   ellipse(ctx, 0, -h * 0.62, w * 0.5, h * 0.42); ctx.fill();
   ctx.fillStyle = '#2f7a56';
   ellipse(ctx, -w * 0.15, -h * 0.68, w * 0.14, h * 0.24); ctx.fill();

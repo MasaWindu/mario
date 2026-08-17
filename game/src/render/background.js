@@ -1,4 +1,5 @@
 import { VIEW_W, VIEW_H } from '../engine/constants.js';
+import { litVertical, lighten } from './color.js';
 
 function hillPath(ctx, camX, speed, baseY, amp, wave, offsetSeed) {
   ctx.beginPath();
@@ -43,16 +44,32 @@ export function drawBackground(ctx, pal, camX, camY, levelHeightPx, t) {
     drawCloud(ctx, bx, by, 12 + (i % 3) * 4);
   }
 
-  // Hills
-  ctx.fillStyle = pal.hillFar;
-  hillPath(ctx, camX, 0.18, VIEW_H * 0.72, 10, 60, 1.2);
+  // Hills — vertical light-to-shadow gradient plus a bright rim on the
+  // sun-facing crest so each band reads as a lit landform, not a flat cutout.
+  drawHillBand(ctx, camX, 0.18, VIEW_H * 0.72, 10, 60, 1.2, pal.hillFar, VIEW_H * 0.15);
+  drawHillBand(ctx, camX, 0.32, VIEW_H * 0.8, 8, 44, 3.4, pal.hillMid, VIEW_H * 0.13);
+  drawHillBand(ctx, camX, 0.5, VIEW_H * 0.88, 6, 30, 6.1, pal.hillNear, VIEW_H * 0.11);
+}
+
+function drawHillBand(ctx, camX, speed, baseY, amp, wave, seed, color, bandH) {
+  hillPath(ctx, camX, speed, baseY, amp, wave, seed);
+  ctx.fillStyle = litVertical(ctx, baseY - bandH, baseY + amp, color, 22);
   ctx.fill();
-  ctx.fillStyle = pal.hillMid;
-  hillPath(ctx, camX, 0.32, VIEW_H * 0.8, 8, 44, 3.4);
-  ctx.fill();
-  ctx.fillStyle = pal.hillNear;
-  hillPath(ctx, camX, 0.5, VIEW_H * 0.88, 6, 30, 6.1);
-  ctx.fill();
+  ctx.save();
+  hillPath(ctx, camX, speed, baseY, amp, wave, seed);
+  ctx.clip();
+  ctx.strokeStyle = lighten(color, 55);
+  ctx.globalAlpha = 0.5;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  const scroll = camX * speed;
+  for (let sx = -10; sx <= VIEW_W + 10; sx += 8) {
+    const worldX = sx + scroll;
+    const yy = baseY - Math.sin(worldX / wave + seed) * amp - Math.sin(worldX / (wave * 0.37) + seed * 2) * amp * 0.3;
+    if (sx === -10) ctx.moveTo(sx, yy); else ctx.lineTo(sx, yy);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawCloud(ctx, x, y, s) {
