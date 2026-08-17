@@ -396,7 +396,7 @@ export class Game {
       const flicker = p.flickerTimer > 0 && Math.floor(this.t * 20) % 2 === 0;
       if (!p.isClimbing) {
         const shadowShrink = p.grounded ? 1 : Math.max(0.3, 1 - Math.abs(p.vy) / 400);
-        drawShadow(ctx, p.x - cam.x + p.w / 2, p.y - cam.y + p.h, p.w * 0.6 * shadowShrink, p.grounded ? 0.28 : 0.14);
+        drawShadow(ctx, p.x - cam.x + p.w / 2, p.y - cam.y + p.h, p.w * 0.65 * shadowShrink, p.grounded ? 0.42 : 0.2);
       }
       drawKip(ctx, p.x - cam.x, p.y - cam.y, p.w, p.h, {
         facing: p.facing, form: p.form, walkPhase: p.walkPhase,

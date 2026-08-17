@@ -21,12 +21,15 @@ function ellipse(ctx, cx, cy, rx, ry) {
   ctx.ellipse(cx, cy, Math.max(0.1, rx), Math.max(0.1, ry), 0, 0, Math.PI * 2);
 }
 
-export function drawShadow(ctx, cx, feetY, radiusX, alpha = 0.28) {
+export function drawShadow(ctx, cx, feetY, radiusX, alpha = 0.42) {
   ctx.save();
-  ctx.globalAlpha = alpha;
-  ctx.fillStyle = '#000000';
+  const grad = ctx.createRadialGradient(cx, feetY + 1, 0, cx, feetY + 1, radiusX);
+  grad.addColorStop(0, `rgba(10,8,20,${alpha})`);
+  grad.addColorStop(0.7, `rgba(10,8,20,${alpha * 0.7})`);
+  grad.addColorStop(1, 'rgba(10,8,20,0)');
+  ctx.fillStyle = grad;
   ctx.beginPath();
-  ctx.ellipse(cx, feetY + 1, radiusX, radiusX * 0.32, 0, 0, Math.PI * 2);
+  ctx.ellipse(cx, feetY + 1, radiusX * 1.15, radiusX * 0.4, 0, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }

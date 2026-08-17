@@ -38,19 +38,20 @@ function drawTile(ctx, id, px, py, pal, cx, cy, map, t) {
     case T.SOLID:
     case T.DECOR_SOLID: {
       const grassy = !neighborSolidAbove(map, cx, cy);
-      // Per-tile brightness jitter breaks up the mechanical repeated-tile
-      // look; a strong top-lit / bottom-shadow gradient gives real form
-      // instead of a flat fill with a thin edge line.
-      const jitter = (hash2(cx, cy) - 0.5) * 14;
-      ctx.fillStyle = litVertical(ctx, py, py + TILE, lighten(pal.ground, jitter), 30);
-      ctx.fillRect(px, py, TILE, TILE);
+      // A smooth, low-frequency undulation (not per-tile random) breaks up
+      // the mechanical repeated-tile look without creating a checkerboard
+      // of hard tile-to-tile brightness seams — adjacent tiles blend into
+      // one continuous terrain mass instead of reading as separate bricks.
+      const jitter = Math.sin(cx * 0.22 + cy * 0.6) * 4;
+      ctx.fillStyle = litVertical(ctx, py, py + TILE, lighten(pal.ground, jitter), 26);
+      ctx.fillRect(px - 0.5, py, TILE + 1, TILE);
       ctx.fillStyle = pal.groundShade;
       ctx.fillRect(px, py + TILE - 3, TILE, 3);
-      // ambient-occlusion corner darkening where neighbors are open
+      // ambient-occlusion only at the true silhouette edge of the ground
+      // mass (open air beside it), never between two solid neighbors.
       ctx.fillStyle = 'rgba(0,0,0,0.14)';
       if (!isSolid(map.get(cx - 1, cy))) ctx.fillRect(px, py, 2.5, TILE);
       if (!isSolid(map.get(cx + 1, cy))) ctx.fillRect(px + TILE - 2.5, py, 2.5, TILE);
-      // light-side rim on the opposite edge for a lit-block feel
       ctx.fillStyle = 'rgba(255,255,255,0.08)';
       if (!isSolid(map.get(cx - 1, cy))) ctx.fillRect(px + 2.5, py, 1, TILE);
       if (grassy) {

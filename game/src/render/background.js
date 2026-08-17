@@ -31,17 +31,15 @@ export function drawBackground(ctx, pal, camX, camY, levelHeightPx, t) {
   ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
   // Clouds (2 parallax layers)
-  ctx.fillStyle = pal.cloudShade;
   for (let i = 0; i < 5; i++) {
     const bx = ((i * 137 - camX * 0.12) % (VIEW_W + 120)) - 60;
     const by = 20 + (i * 53) % 70 + Math.sin(t * 0.3 + i) * 2;
-    drawCloud(ctx, bx + 3, by + 3, 14 + (i % 3) * 5);
+    drawCloud(ctx, bx + 3, by + 3, 14 + (i % 3) * 5, pal.cloudShade);
   }
-  ctx.fillStyle = pal.cloud;
   for (let i = 0; i < 5; i++) {
     const bx = ((i * 191 + 40 - camX * 0.2) % (VIEW_W + 140)) - 70;
     const by = 14 + (i * 41) % 60 + Math.sin(t * 0.3 + i * 1.7) * 2;
-    drawCloud(ctx, bx, by, 12 + (i % 3) * 4);
+    drawCloud(ctx, bx, by, 12 + (i % 3) * 4, pal.cloud);
   }
 
   // Hills — vertical light-to-shadow gradient plus a bright rim on the
@@ -72,10 +70,18 @@ function drawHillBand(ctx, camX, speed, baseY, amp, wave, seed, color, bandH) {
   ctx.restore();
 }
 
-function drawCloud(ctx, x, y, s) {
+function drawCloud(ctx, x, y, s, baseColor) {
   ctx.beginPath();
   ctx.ellipse(x, y, s, s * 0.55, 0, 0, Math.PI * 2);
   ctx.ellipse(x + s * 0.7, y + s * 0.15, s * 0.65, s * 0.4, 0, 0, Math.PI * 2);
   ctx.ellipse(x - s * 0.7, y + s * 0.2, s * 0.55, s * 0.35, 0, 0, Math.PI * 2);
+  if (baseColor) {
+    ctx.fillStyle = litVertical(ctx, y - s * 0.6, y + s * 0.5, baseColor, 16);
+  }
+  ctx.fill();
+  // soft cool-grey underside shadow for volume
+  ctx.fillStyle = 'rgba(120,140,170,0.14)';
+  ctx.beginPath();
+  ctx.ellipse(x, y + s * 0.32, s * 0.85, s * 0.22, 0, 0, Math.PI * 2);
   ctx.fill();
 }
