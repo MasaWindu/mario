@@ -51,6 +51,7 @@ export class Game {
     this.wisp = null;
     this.wispCooldown = 0;
     this.particles = new ParticleSystem();
+    this.rings = [];
     this.dustTimer = 0;
     this.ambientTimer = 0;
     this.camera = new Camera(this.map.pixelWidth(), this.map.pixelHeight());
@@ -151,6 +152,8 @@ export class Game {
 
     this.updateAmbientEffects(dt);
     this.particles.update(dt);
+    for (const r of this.rings) r.t += dt;
+    this.rings = this.rings.filter((r) => r.t < r.maxT);
     this.camera.follow(this.player, dt);
 
     if (!this.player.alive && this.player.deathTimer > 1.1) {
@@ -187,7 +190,14 @@ export class Game {
         case 'land': this.particles.burst(this.player.x + this.player.w / 2, this.player.y + this.player.h, 4, { colors: ['#fff'], speedMin: 10, speedMax: 40, angleMin: Math.PI, angleMax: Math.PI * 2, lifeMin: 0.15, lifeMax: 0.25 }); break;
         case 'dash': this.audio.throwWisp(); this.camera.shake(1.2, 0.12); this.particles.burst(this.player.x + this.player.w / 2, this.player.y + this.player.h / 2, 8, { colors: ['#ff6b3d', '#ffce54'], speedMin: 40, speedMax: 100, lifeMin: 0.2, lifeMax: 0.4 }); break;
         case 'shard': this.audio.shard(); break;
-        case 'grow': this.audio.powerup(); this.camera.shake(0.6, 0.15); break;
+        case 'grow':
+          this.audio.powerup(); this.camera.shake(0.6, 0.15);
+          this.particles.burst(this.player.x + this.player.w / 2, this.player.y + this.player.h / 2, 20, {
+            colors: ['#fff', '#ffe082', '#ff9a4d'], speedMin: 60, speedMax: 150,
+            lifeMin: 0.35, lifeMax: 0.55, size: 2.5, angleMin: 0, angleMax: Math.PI * 2,
+          });
+          this.rings.push({ x: this.player.x + this.player.w / 2, y: this.player.y + this.player.h / 2, t: 0, maxT: 0.4, color: '255,206,84' });
+          break;
         case 'wing': this.audio.powerup(); break;
         case '1up': this.audio.powerup(); break;
         case 'damage': this.audio.damage(); this.camera.shake(2.5, 0.25); break;
@@ -387,6 +397,17 @@ export class Game {
     }
 
     this.particles.render(ctx, cam.x, cam.y);
+    for (const r of this.rings) {
+      const f = r.t / r.maxT;
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, 1 - f);
+      ctx.strokeStyle = `rgb(${r.color})`;
+      ctx.lineWidth = 2 - f * 1.5;
+      ctx.beginPath();
+      ctx.arc(r.x - cam.x, r.y - cam.y, 4 + f * 20, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
     drawHUD(ctx, p, this.levelName, this.timeLeft, this.t, this.levelIndex, LEVELS.length);
   }
 }
