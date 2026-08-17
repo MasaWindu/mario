@@ -46,6 +46,8 @@ export class Game {
     this.wisp = null;
     this.wispCooldown = 0;
     this.particles = new ParticleSystem();
+    this.dustTimer = 0;
+    this.ambientTimer = 0;
     this.camera = new Camera(this.map.pixelWidth(), this.map.pixelHeight());
     this.camera.x = Math.max(0, this.player.x - VIEW_W / 2);
     this.timeLeft = LEVEL_TIME;
@@ -109,6 +111,7 @@ export class Game {
     if (input.wasPressed('action') && this.player.form !== 'ember' && !this.wisp && this.wispCooldown <= 0 && this.player.alive) {
       this.wisp = makeWisp(this.player.x + this.player.w / 2, this.player.y + this.player.h * 0.4, this.player.facing);
       this.audio.throwWisp();
+      this.player.throwTimer = 0.25;
     }
 
     this.player.update(dt, input, this.map);
@@ -137,6 +140,7 @@ export class Game {
     for (const it of this.items) updateItem(it, dt, this.map);
     this.resolveItemPickups();
 
+    this.updateAmbientEffects(dt);
     this.particles.update(dt);
     this.camera.follow(this.player, dt);
 
@@ -258,6 +262,53 @@ export class Game {
     this.items = this.items.filter((it) => !it.collected);
   }
 
+  updateAmbientEffects(dt) {
+    const p = this.player;
+
+    // Running dust trail — kicked up behind the feet, warm dust tone so it
+    // reads against grass/rock rather than blending into a white sky.
+    this.dustTimer -= dt;
+    if (p.alive && p.grounded && Math.abs(p.vx) > 50 && this.dustTimer <= 0) {
+      this.dustTimer = 0.045;
+      const behindX = p.x + p.w / 2 - Math.sign(p.vx) * p.w * 0.45;
+      for (let i = 0; i < 2; i++) {
+        this.particles.spawn({
+          x: behindX + (Math.random() * 4 - 2), y: p.y + p.h - 1, vx: -p.vx * 0.22 + (Math.random() * 20 - 10), vy: -26 - Math.random() * 18,
+          life: 0.3 + Math.random() * 0.15, size: 2.6 + Math.random() * 2,
+          color: 'rgba(238,220,180,0.85)', gravity: 220, drag: 0.88,
+        });
+      }
+    }
+    // Dash motion streaks
+    if (p.alive && p.dashTimer > 0) {
+      this.particles.spawn({
+        x: p.x + p.w / 2 - p.facing * p.w * 0.5, y: p.y + p.h * 0.5 + (Math.random() * 6 - 3),
+        vx: -p.facing * 40, vy: 0, life: 0.18, size: 1.5,
+        color: Math.random() > 0.5 ? '#ffce54' : '#ff8f5c', gravity: 0, drag: 0.85,
+      });
+    }
+
+    // Ambient biome atmosphere (fireflies / pollen / motes) — dense enough
+    // to register as deliberate weather rather than stray pixels.
+    this.ambientTimer -= dt;
+    if (this.ambientTimer <= 0) {
+      this.ambientTimer = 0.12;
+      const cam = this.camera;
+      const biome = this.map.biome;
+      for (let i = 0; i < 2; i++) {
+        const ax = cam.x + Math.random() * VIEW_W;
+        const ay = cam.y + Math.random() * VIEW_H * 0.8;
+        if (biome === 'meadow') {
+          this.particles.spawn({ x: ax, y: ay, vx: 8 + Math.random() * 10, vy: -6 + Math.random() * 10, life: 3 + Math.random() * 2, size: 2.4, color: 'rgba(255,250,225,0.85)', gravity: -3, drag: 0.995, shape: 'circle' });
+        } else if (biome === 'cavern') {
+          this.particles.spawn({ x: ax, y: ay, vx: Math.sin(this.t + ax) * 6, vy: -8, life: 2.5 + Math.random() * 2, size: 2.6, color: 'rgba(150,255,190,0.9)', gravity: -2, drag: 0.99, shape: 'circle' });
+        } else if (biome === 'sky') {
+          this.particles.spawn({ x: ax, y: ay, vx: 4, vy: 3, life: 3.5, size: 2, color: 'rgba(255,255,255,0.85)', gravity: 0, drag: 1, shape: 'circle' });
+        }
+      }
+    }
+  }
+
   render(alpha, fps) {
     const ctx = this.ctx;
     ctx.clearRect(0, 0, VIEW_W, VIEW_H);
@@ -322,7 +373,7 @@ export class Game {
         airborne: !p.grounded && !p.isClimbing, vy: p.vy, vx: p.vx, crouching: false,
         wallSliding: p.wallDir !== 0 && !p.grounded, dashing: p.dashTimer > 0,
         hurtFlicker: flicker, idleT: p.idleT,
-        landSquash: p.landSquashTimer / 0.16,
+        landSquash: p.landSquashTimer / 0.16, throwing: p.throwTimer > 0,
       });
     }
 

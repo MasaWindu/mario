@@ -80,17 +80,61 @@ export function drawKip(ctx, x, y, w, h, state) {
   }
 
   // Body
-  ctx.fillStyle = ember ? KIP.furEmber : KIP.fur;
+  const bodyCol = ember ? KIP.furEmber : KIP.fur;
+  ctx.fillStyle = bodyCol;
   const bw = (big ? w * 0.95 : w * 0.86) * stretch;
   const bh = bodyH * squash;
   roundRect(ctx, -bw / 2, hipY - bh, bw, bh, bw * 0.42);
   ctx.fill();
+
+  // Arms — cream-toned like the belly so they read as a distinct limb
+  // against the body fill at any form/color (small, big, ember).
+  const armLen = (big ? w * 0.56 : w * 0.46);
+  const armW = big ? 3.2 : 2.7;
+  const shoulderY = hipY - bh * 0.8;
+  const runCycle = Math.sin(walkPhase * Math.PI * 2);
+  let backArmAngle, frontArmAngle;
+  if (throwing) {
+    backArmAngle = -0.35; frontArmAngle = 1.65;
+  } else if (dashing) {
+    backArmAngle = -1.35; frontArmAngle = -1.05;
+  } else if (airborne) {
+    backArmAngle = vy < 0 ? 1.55 : 0.5;
+    frontArmAngle = vy < 0 ? 1.9 : 0.9;
+  } else if (Math.abs(runCycle) > 0.02 && !crouching) {
+    backArmAngle = runCycle * 0.85;
+    frontArmAngle = -runCycle * 0.85;
+  } else {
+    const idleSway = Math.sin(idleT * 1.6) * 0.08;
+    backArmAngle = idleSway; frontArmAngle = -idleSway;
+  }
+
+  function drawArm(angle, shade) {
+    ctx.save();
+    ctx.translate(0, shoulderY);
+    ctx.rotate(angle);
+    ctx.strokeStyle = 'rgba(60,35,15,0.4)';
+    ctx.lineWidth = 0.7;
+    roundRect(ctx, -armW / 2, 0, armW, armLen, armW * 0.5);
+    ctx.fillStyle = shade;
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = shade;
+    ellipse(ctx, 0, armLen, armW * 0.55, armW * 0.55);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(60,35,15,0.4)';
+    ctx.beginPath(); ctx.ellipse(0, armLen, armW * 0.55, armW * 0.55, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+  drawArm(backArmAngle, KIP.bellyShade);
 
   // Belly
   ctx.fillStyle = KIP.belly;
   const belW = bw * 0.55, belH = bh * 0.62;
   roundRect(ctx, -belW / 2 + 0.5, hipY - belH - 1, belW, belH, belW * 0.4);
   ctx.fill();
+
+  drawArm(frontArmAngle, KIP.belly);
 
   // Front leg
   if (!crouching) {
@@ -193,11 +237,6 @@ export function drawKip(ctx, x, y, w, h, state) {
     ctx.globalCompositeOperation = 'source-over';
   }
 
-  if (throwing) {
-    ctx.fillStyle = KIP.belly;
-    roundRect(ctx, bw * 0.3, hipY - bh * 0.6, 5, 2.6, 1.2);
-    ctx.fill();
-  }
 
   ctx.restore();
   ctx.globalAlpha = 1;
