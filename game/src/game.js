@@ -42,7 +42,12 @@ export class Game {
       en.homeMinX = e.x - 60; en.homeMaxX = e.x + 60;
       return en;
     });
-    this.items = [];
+    this.items = (this.map.pickups || []).map((pk) => {
+      const it = makeItem(pk.kind, pk.x, pk.y);
+      it.emerging = false;
+      it.y = pk.y;
+      return it;
+    });
     this.wisp = null;
     this.wispCooldown = 0;
     this.particles = new ParticleSystem();
@@ -119,6 +124,10 @@ export class Game {
 
     if (this.wisp) {
       updateWisp(this.wisp, dt, this.map, this.player);
+      this.particles.spawn({
+        x: this.wisp.x, y: this.wisp.y, vx: (Math.random() * 20 - 10), vy: (Math.random() * 20 - 10),
+        life: 0.22, size: 2.2, color: 'rgba(255,230,150,0.8)', gravity: 0, drag: 0.9,
+      });
       if (this.wisp.hitSwitch && !this.map.gatesOpen) {
         this.map.toggleGates();
         this.audio.powerup();

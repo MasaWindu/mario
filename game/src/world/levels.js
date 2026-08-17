@@ -24,6 +24,7 @@ function buildLevel1() {
   lb.set(20, GROUND, 0); lb.set(20, GROUND + 1, 0); lb.set(20, GROUND + 2, 0);
   lb.platform(22, 26, 9, true);
   lb.enemy('glimmoth', 24, 6);
+  lb.shardArc(17, GROUND - 1, 22, GROUND - 3, 5);
 
   lb.enemy('puffshroom', 30, GROUND - 1);
   lb.enemy('puffshroom', 33, GROUND - 1);
@@ -39,6 +40,7 @@ function buildLevel1() {
   for (const gx of [44, 45, 46, 47]) { lb.set(gx, GROUND, 0); lb.set(gx, GROUND + 1, 0); lb.set(gx, GROUND + 2, 0); }
   lb.platform(45, 47, 10, true);
   lb.enemy('glimmoth', 45, 5);
+  lb.shardArc(43, GROUND - 1, 46, GROUND - 2, 5);
 
   // staircase up
   lb.platform(52, 54, 10, false);
@@ -70,6 +72,8 @@ function buildLevel1() {
   lb.goal(w - 4, GROUND);
 
   for (let i = 0; i < 30; i++) lb.deco('flower', 5 + i * 3.7 + (i % 3), GROUND - 1);
+  for (let i = 0; i < 14; i++) lb.deco('bush', 4 + i * 8.3, GROUND - 1);
+  for (let i = 0; i < 14; i++) lb.deco('rock', 6 + i * 8.4, GROUND - 1);
   return lb.build();
 }
 
@@ -100,6 +104,7 @@ function buildLevel2() {
   lb.platform(31, 33, 9, true);
   lb.platform(34, 36, 7, true);
   lb.enemy('glimmoth', 33, 5);
+  lb.shardArc(30, GROUND - 1, 35, GROUND - 6, 6);
 
   lb.decorSolid(38, 42, GROUND, 3);
   lb.block(39, 7, 'power');
@@ -134,7 +139,9 @@ function buildLevel2() {
   lb.enemy('glimmoth', 86, 6);
   lb.goal(w - 4, GROUND);
 
-  for (let i = 0; i < 20; i++) lb.deco('crystal', 4 + i * 4.8, GROUND - 1);
+  for (let i = 0; i < 14; i++) lb.deco('crystal', 5 + i * 6.8, GROUND - 1);
+  for (let i = 0; i < 11; i++) lb.deco('stalactite', 4 + i * 9, 2);
+  for (let i = 0; i < 8; i++) lb.deco('glowmushroom', 7 + i * 11.5, GROUND - 1);
   return lb.build();
 }
 
@@ -161,6 +168,7 @@ function buildLevel3() {
   lb.platform(31, 34, GROUND - 2, false);
   lb.block(32, GROUND - 6, 'shard5');
   lb.block(33, GROUND - 6, 'shard5');
+  lb.shardArc(20, GROUND - 4, 25, GROUND - 2, 5);
 
   lb.platform(37, 40, GROUND, false);
   lb.enemy('glimmoth', 38, 5);
@@ -188,6 +196,7 @@ function buildLevel3() {
   lb.goal(w - 4, GROUND);
 
   for (let i = 0; i < 16; i++) lb.deco('cloudpuff', 8 + i * 5.6, GROUND - 5 - (i % 4));
+  for (let i = 0; i < 16; i++) lb.deco('debris', 6 + i * 6.1, 3 + (i % 5) * 1.8);
   return lb.build();
 }
 

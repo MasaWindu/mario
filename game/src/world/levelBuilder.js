@@ -12,6 +12,7 @@ export class LevelBuilder {
     this.enemies = [];
     this.decor = [];
     this.gateCells = [];
+    this.pickups = [];
     this.start = { x: 2, y: height - 4 };
   }
 
@@ -99,6 +100,25 @@ export class LevelBuilder {
 
   setStart(x, y) { this.start = { x: x * 16, y: y * 16 }; return this; }
 
+  // A static floating pickup (no ? block needed) — used for reward
+  // trails/arcs that entice the player through a jump or platform run.
+  pickup(kind, x, y) {
+    this.pickups.push({ kind, x: x * 16, y: y * 16 });
+    return this;
+  }
+
+  // Convenience: a shard5 arc between two points, `count` shards along it.
+  shardArc(x0, y0, x1, y1, count) {
+    for (let i = 0; i < count; i++) {
+      const f = i / (count - 1 || 1);
+      const x = x0 + (x1 - x0) * f;
+      const arc = Math.sin(f * Math.PI) * -0.85;
+      const y = y0 + (y1 - y0) * f + arc;
+      this.pickup('shard5', x, y);
+    }
+    return this;
+  }
+
   build() {
     const map = new TileMap({
       width: this.width, height: this.height, grid: this.grid,
@@ -108,6 +128,7 @@ export class LevelBuilder {
     map.start = this.start;
     map.gateCells = this.gateCells;
     map.gatesOpen = false;
+    map.pickups = this.pickups;
     return map;
   }
 }

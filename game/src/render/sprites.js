@@ -431,23 +431,97 @@ export function drawDecor(ctx, type, x, y, t) {
     ctx.fillStyle = '#ffe082';
     ellipse(ctx, sway * 0.4, -6, 1.4, 1.4); ctx.fill();
   } else if (type === 'crystal') {
-    const glow = 0.5 + Math.sin(t * 3 + x) * 0.3;
+    // Background wall-embedded gem cluster — kept small, desaturated and
+    // rooted in a rock base so it reads as scenery, not a collectible.
+    const glow = 0.4 + Math.sin(t * 2.4 + x) * 0.2;
+    ctx.fillStyle = '#4a3d63';
+    ellipse(ctx, 0, -1, 5, 2.6);
+    ctx.fill();
     ctx.globalCompositeOperation = 'lighter';
-    ctx.fillStyle = `rgba(140,110,255,${0.25 + glow * 0.2})`;
-    ctx.beginPath(); ctx.arc(0, -4, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(120,95,200,${0.15 + glow * 0.12})`;
+    ctx.beginPath(); ctx.arc(0, -3, 4.5, 0, Math.PI * 2); ctx.fill();
     ctx.globalCompositeOperation = 'source-over';
-    ctx.fillStyle = '#a68fff';
+    ctx.fillStyle = '#7a68a8';
     ctx.beginPath();
-    ctx.moveTo(0, -12); ctx.lineTo(3.4, -5); ctx.lineTo(0, 0); ctx.lineTo(-3.4, -5);
+    ctx.moveTo(0, -7.5); ctx.lineTo(2.1, -3); ctx.lineTo(0, -0.5); ctx.lineTo(-2.1, -3);
     ctx.closePath(); ctx.fill();
-    ctx.fillStyle = '#d9ccff';
-    ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(1.4, -6); ctx.lineTo(0, -2); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#a698d0';
+    ctx.beginPath(); ctx.moveTo(0, -7.5); ctx.lineTo(0.9, -3.6); ctx.lineTo(0, -1.5); ctx.closePath(); ctx.fill();
   } else if (type === 'cloudpuff') {
     ctx.fillStyle = 'rgba(255,255,255,0.85)';
     const bob = Math.sin(t * 1.5 + x) * 1.5;
     ellipse(ctx, 0, bob, 6, 3.2); ctx.fill();
     ellipse(ctx, 4, 1 + bob, 4, 2.4); ctx.fill();
     ellipse(ctx, -4, 1 + bob, 4, 2.4); ctx.fill();
+  } else if (type === 'bush') {
+    const sway = Math.sin(t * 1.2 + x) * 0.8;
+    ctx.fillStyle = '#3a9450';
+    ellipse(ctx, sway, -3, 7, 4.5); ctx.fill();
+    ellipse(ctx, -4 + sway * 0.7, -2, 4.5, 3.2); ctx.fill();
+    ellipse(ctx, 4.5 + sway * 0.7, -2, 4.5, 3.2); ctx.fill();
+    ctx.fillStyle = '#4fb867';
+    ellipse(ctx, sway - 1, -4.5, 3.4, 2.2); ctx.fill();
+    ctx.fillStyle = '#ff8fb0';
+    ellipse(ctx, sway + 2.5, -3.5, 1, 1); ctx.fill();
+    ellipse(ctx, sway - 3, -2, 1, 1); ctx.fill();
+  } else if (type === 'rock') {
+    ctx.fillStyle = '#6e6e80';
+    ctx.beginPath();
+    ctx.moveTo(-9, 0); ctx.lineTo(-7.5, -6.5); ctx.lineTo(-1.5, -9.5); ctx.lineTo(6, -7.5); ctx.lineTo(9, -1.5); ctx.lineTo(9, 0);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#9d9dae';
+    ctx.beginPath(); ctx.moveTo(-7.5, -6.5); ctx.lineTo(-1.5, -9.5); ctx.lineTo(-1.5, -4.5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = '#4f4f5e';
+    ctx.fillRect(-9, -1.4, 18, 1.8);
+  } else if (type === 'stalactite') {
+    const drip = (Math.sin(t * 2 + x) + 1) * 0.5;
+    ctx.fillStyle = '#241a38';
+    ctx.beginPath();
+    ctx.moveTo(-4.5, 0); ctx.lineTo(4.5, 0); ctx.lineTo(1.6, 11 + Math.sin(x) * 3); ctx.lineTo(0.4, 8.5);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(150,120,200,0.55)';
+    ctx.beginPath();
+    ctx.moveTo(-3.6, -0.5); ctx.lineTo(-0.8, 6.5); ctx.lineTo(-1.6, 6); ctx.lineTo(-3, -0.5);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(150,210,255,0.85)';
+    ellipse(ctx, 1, 10 + drip * 4, 0.8, 1.2); ctx.fill();
+  } else if (type === 'glowmushroom') {
+    // Bracket-fungus cluster on a rock ledge — deliberately NOT a
+    // mushroom-cap-on-stem silhouette, so it can never be mistaken for the
+    // Puffshroom enemy at a glance.
+    const pulse = 0.6 + Math.sin(t * 3 + x) * 0.25;
+    ctx.fillStyle = '#3a2c4c';
+    ellipse(ctx, 0, 0, 6, 2.2); ctx.fill();
+    ctx.globalCompositeOperation = 'lighter';
+    for (const [dx, s] of [[-2.6, 0.8], [0.6, 1], [3, 0.65]]) {
+      ctx.fillStyle = `rgba(120,220,255,${0.2 + pulse * 0.18})`;
+      ctx.beginPath(); ctx.arc(dx, -3.2 * s, 3.2 * s, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+    for (const [dx, s] of [[-2.6, 0.8], [0.6, 1], [3, 0.65]]) {
+      ctx.fillStyle = '#5ecfe0';
+      ctx.beginPath();
+      ctx.ellipse(dx, -1.4 * s, 2.3 * s, 1.6 * s, 0, Math.PI, 0);
+      ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.55)';
+      ellipse(ctx, dx - 0.6 * s, -1.9 * s, 0.5 * s, 0.5 * s); ctx.fill();
+    }
+  } else if (type === 'debris') {
+    const bob = Math.sin(t * 1.1 + x) * 3;
+    const spin = t * 0.4 + x;
+    ctx.save();
+    ctx.translate(0, bob);
+    ctx.rotate(Math.sin(spin) * 0.3);
+    ctx.fillStyle = '#efe6ff';
+    roundRect(ctx, -6, -3.5, 12, 7, 2.2); ctx.fill();
+    ctx.fillStyle = '#8a72d4';
+    ctx.fillRect(-6, 1.5, 12, 2);
+    ctx.fillStyle = '#c9b6f2';
+    ellipse(ctx, -2, -1, 1.8, 1.4); ctx.fill();
+    ctx.strokeStyle = 'rgba(90,70,150,0.5)';
+    ctx.lineWidth = 0.8;
+    roundRect(ctx, -6, -3.5, 12, 7, 2.2); ctx.stroke();
+    ctx.restore();
   }
   ctx.restore();
 }
@@ -455,16 +529,19 @@ export function drawDecor(ctx, type, x, y, t) {
 export function drawWisp(ctx, x, y, t, held) {
   ctx.save();
   ctx.translate(x, y);
-  const pulse = 1 + Math.sin(t * 8) * 0.15;
+  const pulse = 1 + Math.sin(t * 8) * 0.2;
   ctx.globalCompositeOperation = 'lighter';
-  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 7 * pulse);
-  grad.addColorStop(0, 'rgba(255,255,220,0.9)');
-  grad.addColorStop(0.5, 'rgba(255,220,140,0.4)');
+  const grad = ctx.createRadialGradient(0, 0, 0, 0, 0, 11 * pulse);
+  grad.addColorStop(0, 'rgba(255,255,230,1)');
+  grad.addColorStop(0.4, 'rgba(255,225,140,0.6)');
   grad.addColorStop(1, 'rgba(255,220,140,0)');
   ctx.fillStyle = grad;
-  ctx.beginPath(); ctx.arc(0, 0, 7 * pulse, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, 11 * pulse, 0, Math.PI * 2); ctx.fill();
   ctx.globalCompositeOperation = 'source-over';
   ctx.fillStyle = '#fff8e0';
-  ellipse(ctx, 0, 0, 2.2, 2.2); ctx.fill();
+  ellipse(ctx, 0, 0, 2.6, 2.6); ctx.fill();
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath(); ctx.arc(0, 0, 3.6, 0, Math.PI * 2); ctx.stroke();
   ctx.restore();
 }
