@@ -36,7 +36,7 @@ export function drawShadow(ctx, cx, feetY, radiusX, alpha = 0.28) {
 export function drawKip(ctx, x, y, w, h, state) {
   const { facing = 1, form = 'small', walkPhase = 0, airborne = false, vy = 0, vx = 0,
     crouching = false, wallSliding = false, dashing = false, hurtFlicker = false,
-    idleT = 0, throwing = false, landSquash = 0 } = state;
+    idleT = 0, throwing = false, landSquash = 0, skidding = false } = state;
 
   if (hurtFlicker) { ctx.globalAlpha = 0.45; }
 
@@ -44,7 +44,8 @@ export function drawKip(ctx, x, y, w, h, state) {
   const cx = x + w / 2;
   const feetY = y + h;
   ctx.translate(cx, feetY);
-  const lean = dashing ? 0.32 * Math.sign(vx || facing) : Math.max(-0.22, Math.min(0.22, vx / 260));
+  const lean = skidding ? -0.34 * Math.sign(vx || facing)
+    : dashing ? 0.32 * Math.sign(vx || facing) : Math.max(-0.22, Math.min(0.22, vx / 260));
   ctx.rotate(lean);
   ctx.scale(facing, 1);
 
@@ -55,7 +56,7 @@ export function drawKip(ctx, x, y, w, h, state) {
   const squash = (airborne ? (vy < 0 ? 1.08 : 0.94) : (1 - Math.abs(Math.sin(walkPhase * Math.PI)) * 0.05)) - landSquashAmt;
   const stretch = (airborne ? (vy < 0 ? 0.92 : 1.06) : (1 + Math.abs(Math.sin(walkPhase * Math.PI)) * 0.04)) + landSquashAmt * 1.4;
 
-  const legSwing = airborne ? 0.25 : Math.sin(walkPhase * Math.PI * 2) * 0.55;
+  const legSwing = skidding ? 0.75 : airborne ? 0.25 : Math.sin(walkPhase * Math.PI * 2) * 0.55;
   const legLen = big ? 6 : 4.5;
   const legW = 3.4;
   const hipY = -legLen;
@@ -244,7 +245,7 @@ export function drawKip(ctx, x, y, w, h, state) {
 
 // --- Enemies ---------------------------------------------------------------
 
-export function drawPuffshroom(ctx, x, y, w, h, facing, walkPhase, squished) {
+export function drawPuffshroom(ctx, x, y, w, h, facing, walkPhase, squished, t = 0) {
   ctx.save();
   const cx = x + w / 2, baseY = y + h;
   ctx.translate(cx, baseY);
@@ -270,10 +271,11 @@ export function drawPuffshroom(ctx, x, y, w, h, facing, walkPhase, squished) {
   // stem/face band
   ctx.fillStyle = '#fbe3c4';
   roundRect(ctx, -w * 0.4, -h * 0.42 + bob * 0.5, w * 0.8, h * 0.28, 2); ctx.fill();
-  // eyes
+  // eyes (occasional blink for idle personality)
+  const pBlink = (Math.sin(t * 0.8 + w * 3) > 0.98) ? 0.15 : 1;
   ctx.fillStyle = '#241614';
-  ellipse(ctx, -w * 0.14, -h * 0.32 + bob * 0.5, 1.1, 1.3); ctx.fill();
-  ellipse(ctx, w * 0.14, -h * 0.32 + bob * 0.5, 1.1, 1.3); ctx.fill();
+  ellipse(ctx, -w * 0.14, -h * 0.32 + bob * 0.5, 1.1, 1.3 * pBlink); ctx.fill();
+  ellipse(ctx, w * 0.14, -h * 0.32 + bob * 0.5, 1.1, 1.3 * pBlink); ctx.fill();
   ctx.restore();
 }
 
@@ -328,16 +330,19 @@ export function drawGlimmoth(ctx, x, y, w, h, facing, flapPhase, t) {
   ellipse(ctx, w * 0.22, -h * 0.68, 0.9, 0.9); ctx.fill();
 
   // Eyes
+  const gBlink = (Math.sin(t * 0.9 + w) > 0.99) ? 0.2 : 1;
   ctx.fillStyle = '#1c1430';
-  ellipse(ctx, -w * 0.11, -h * 0.06, 1.3, 1.5); ctx.fill();
-  ellipse(ctx, w * 0.11, -h * 0.06, 1.3, 1.5); ctx.fill();
-  ctx.fillStyle = '#ffd9f0';
-  ellipse(ctx, -w * 0.08, -h * 0.12, 0.4, 0.45); ctx.fill();
-  ellipse(ctx, w * 0.14, -h * 0.12, 0.4, 0.45); ctx.fill();
+  ellipse(ctx, -w * 0.11, -h * 0.06, 1.3, 1.5 * gBlink); ctx.fill();
+  ellipse(ctx, w * 0.11, -h * 0.06, 1.3, 1.5 * gBlink); ctx.fill();
+  if (gBlink > 0.5) {
+    ctx.fillStyle = '#ffd9f0';
+    ellipse(ctx, -w * 0.08, -h * 0.12, 0.4, 0.45); ctx.fill();
+    ellipse(ctx, w * 0.14, -h * 0.12, 0.4, 0.45); ctx.fill();
+  }
   ctx.restore();
 }
 
-export function drawShellbug(ctx, x, y, w, h, facing, walkPhase, inShell) {
+export function drawShellbug(ctx, x, y, w, h, facing, walkPhase, inShell, t = 0) {
   ctx.save();
   const cx = x + w / 2, baseY = y + h;
   ctx.translate(cx, baseY);
@@ -356,6 +361,16 @@ export function drawShellbug(ctx, x, y, w, h, facing, walkPhase, inShell) {
   for (let i = -1; i <= 1; i += 2) {
     roundRect(ctx, i * w * 0.22 - 1, -2.6 + (i > 0 ? bob : -bob), 2.2, 2.6, 1); ctx.fill();
   }
+  // Antennae — small idle wiggle so it reads as alert/alive when standing
+  const wiggle = Math.sin(t * 4) * 0.25;
+  ctx.strokeStyle = '#2a2a3a';
+  ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.moveTo(w * 0.18, -h * 0.85);
+  ctx.lineTo(w * 0.28 + wiggle * 2, -h * 1.05);
+  ctx.moveTo(w * 0.3, -h * 0.82);
+  ctx.lineTo(w * 0.42 - wiggle * 2, -h * 1.0);
+  ctx.stroke();
   ctx.fillStyle = '#3e9c6f';
   ellipse(ctx, 0, -h * 0.62, w * 0.5, h * 0.42); ctx.fill();
   ctx.fillStyle = '#2f7a56';

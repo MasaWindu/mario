@@ -33,6 +33,7 @@ export class Player {
     this.invulnTimer = 0.5;
     this.flickerTimer = 0;
     this.landSquashTimer = 0;
+    this.skidding = false;
     this.lives = 3;
     this.shards = 0;
     this.alive = true;
@@ -142,7 +143,13 @@ export class Player {
       const maxSpeed = sprinting ? MAX_SPRINT_SPEED : MAX_RUN_SPEED;
       const accel = this.grounded ? MOVE_ACCEL : AIR_ACCEL;
       const friction = this.grounded ? GROUND_FRICTION : AIR_FRICTION;
-      if (moveDir !== 0) {
+      const reversing = this.grounded && moveDir !== 0 && Math.sign(this.vx) === -moveDir && Math.abs(this.vx) > 40;
+      this.skidding = reversing;
+      if (reversing) {
+        // Skid: keep facing the old direction and brake hard before
+        // committing to the new direction, instead of snapping instantly.
+        this.vx += moveDir * GROUND_FRICTION * 0.85 * dt;
+      } else if (moveDir !== 0) {
         this.vx += moveDir * accel * dt;
         this.vx = clamp(this.vx, -maxSpeed, maxSpeed);
         this.facing = moveDir;

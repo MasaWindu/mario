@@ -298,6 +298,17 @@ export class Game {
         });
       }
     }
+    // Skid dust — brief hard-braking puffs at the pivot foot
+    if (p.alive && p.skidding && this.dustTimer <= 0) {
+      this.dustTimer = 0.03;
+      for (let i = 0; i < 2; i++) {
+        this.particles.spawn({
+          x: p.x + p.w / 2 + (Math.random() * 6 - 3), y: p.y + p.h - 1, vx: (Math.random() * 30 - 15), vy: -30 - Math.random() * 20,
+          life: 0.25 + Math.random() * 0.1, size: 2.8 + Math.random() * 2,
+          color: 'rgba(220,200,160,0.9)', gravity: 260, drag: 0.85,
+        });
+      }
+    }
     // Dash motion streaks
     if (p.alive && p.dashTimer > 0) {
       this.particles.spawn({
@@ -370,9 +381,9 @@ export class Game {
       const sx = e.x - cam.x, sy = e.y - cam.y;
       if (sx < -30 || sx > VIEW_W + 30) continue;
       if (e.type !== 'glimmoth') drawShadow(ctx, sx + e.w / 2, sy + e.h, e.w * 0.55);
-      if (e.type === 'puffshroom') drawPuffshroom(ctx, sx, sy, e.w, e.h, e.facing, e.walkPhase, e.dead);
+      if (e.type === 'puffshroom') drawPuffshroom(ctx, sx, sy, e.w, e.h, e.facing, e.walkPhase, e.dead, this.t);
       else if (e.type === 'glimmoth') drawGlimmoth(ctx, sx, sy, e.w, e.h, e.vx < 0 ? -1 : 1, e.walkPhase, this.t);
-      else if (e.type === 'shellbug') drawShellbug(ctx, sx, sy, e.w, e.h, e.facing, e.walkPhase, e.state === 'shell' || e.state === 'kicked');
+      else if (e.type === 'shellbug') drawShellbug(ctx, sx, sy, e.w, e.h, e.facing, e.walkPhase, e.state === 'shell' || e.state === 'kicked', this.t);
     }
 
     if (this.wisp) {
@@ -393,6 +404,7 @@ export class Game {
         wallSliding: p.wallDir !== 0 && !p.grounded, dashing: p.dashTimer > 0,
         hurtFlicker: flicker, idleT: p.idleT,
         landSquash: p.landSquashTimer / 0.16, throwing: p.throwTimer > 0,
+        skidding: p.skidding,
       });
     }
 
